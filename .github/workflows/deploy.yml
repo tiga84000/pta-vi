@@ -23,6 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Cache des templates d'export
         id: tpl-cache
@@ -54,8 +57,13 @@ jobs:
           godot --headless --import
           mkdir -p build/web
           godot --headless --export-release "Web" build/web/index.html
+          # copie jouable de la V0.1 (branche v0.1) dans /v0.1/
+          git worktree add ../pta-vi-v01 origin/v0.1
+          (cd ../pta-vi-v01 && godot --headless --import && \
+            mkdir -p "$GITHUB_WORKSPACE/build/web/v0.1" && \
+            godot --headless --export-release "Web" "$GITHUB_WORKSPACE/build/web/v0.1/index.html")
           touch build/web/.nojekyll
-          ls -la build/web
+          ls -la build/web build/web/v0.1
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

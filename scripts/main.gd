@@ -6,6 +6,10 @@ const GameScript := preload("res://scripts/game.gd")
 
 
 func _ready() -> void:
+	# modes de test (?autotest=1, ?spawn=...) : on passe directement au jeu
+	if GameScript.has_flag("autotest") or GameScript.param("spawn", "") != "":
+		add_child(GameScript.new())
+		return
 	_show_title()
 
 
@@ -39,6 +43,7 @@ func _show_title() -> void:
 
 	box.add_child(_label("PTA VI", 110, Color.WHITE))
 	box.add_child(_label("P’TITE TEUB AUTO", 36, Color("ffd9a8")))
+	box.add_child(_label("V0.2", 20, Color("ffffff")))
 
 	var spacer := Control.new()
 	spacer.custom_minimum_size = Vector2(0, 24)

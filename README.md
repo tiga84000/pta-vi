@@ -1,18 +1,14 @@
-# PTA VI — P’tite Teub Auto
+# PTA VI — P'tite Teub Auto
 
-Petit GTA-like humoristique en 3D, jouable dans Safari (iPhone) et sur ordinateur.
+Parodie 3D humoristique et semi-réaliste, jouable dans Safari (iPhone) — Godot 4.7, rendu Compatibility, export Web sans threads.
 
-- Moteur : Godot 4.7.2 stable, GDScript, rendu Compatibility (WebGL 2)
-- Export : Web HTML5/WebAssembly **sans threads** (compatible GitHub Pages)
-- Déploiement : GitHub Actions → GitHub Pages à chaque push sur `main`
+- **V0.2** (racine du site) : appartement de Yannick explorable — chambre (lits superposés), salon avec verrière, cuisine, salle de bain, entrée ; collisions murs/meubles, caméra 3e personne avec collisions, joystick tactile ; affiches de football originales.
+- **V0.1** : conservée sur la branche `v0.1`, publiée sous `/v0.1/`.
 
-## Prototype actuel
-Écran d’accueil, bouton « Jouer », pièce 3D, personnage provisoire (capsule), joystick tactile
-(gauche), caméra 3ᵉ personne (glisser à droite). Clavier : WASD / ZQSD / flèches.
+## Tests
+- `godot --headless --path . -- --autotest=1 --quitdone=1` : parcours automatique de 15 points, détecte traversées de murs et caméra dans les murs.
+- `python3 tools/test_web.py build/web <dossier_captures>` : Playwright (Chrome, viewport iPhone) — titre, joystick tactile, rotation caméra, autotest dans le navigateur, budgets (draw calls, primitives, mémoire textures).
+- `python3 -I tools/make_assets.py assets` régénère textures et affiches (toutes originales, sans marque ni licence).
 
-## Test local
-```
-godot --headless --import
-godot --headless --export-release "Web" build/web/index.html
-python3 tools/test_web.py build/web ./shots   # Playwright + Chrome
-```
+## Paramètres d'URL (tests)
+`?autotest=1` · `?spawn=chambre|hall|sdb|salon|kitchen|verriere` · `?yaw=<deg>` · `?pitch=<deg>`

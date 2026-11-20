@@ -1,4 +1,4 @@
-"""Test de fumée Playwright : charge l'export Web de PTA VI dans Chrome (viewport iPhone paysage),
+"""Tests Playwright V0.2 (parcours tactile + autotest collisions/budgets). Test de fumée Playwright : charge l'export Web de PTA VI dans Chrome (viewport iPhone paysage),
 clique sur JOUER, déplace le joystick tactile et vérifie les logs / erreurs console."""
 import subprocess, sys, time, json
 from playwright.sync_api import sync_playwright
@@ -65,6 +65,20 @@ try:
         page.set_viewport_size({"width": 390, "height": 844})
         time.sleep(1.5)
         page.screenshot(path=f"{out_dir}/5_portrait.png")
+
+        # --- autotest embarqué : collisions, caméra, budgets de rendu ---
+        page.close()
+        page2 = ctx.new_page()
+        logs2 = []
+        page2.on("console", lambda m: logs2.append(m.text))
+        page2.on("pageerror", lambda e: errors.append("autotest: " + str(e)))
+        page2.goto(f"http://127.0.0.1:{port}/index.html?autotest=1")
+        for _ in range(240):
+            if any("[PTA-TEST] RESULT" in l for l in logs2):
+                break
+            page2.wait_for_timeout(1000)
+        line = next((l for l in logs2 if "[PTA-TEST] RESULT" in l), None)
+        result["autotest"] = json.loads(line.split("RESULT", 1)[1]) if line else None
         browser.close()
 finally:
     server.terminate()
@@ -73,3 +87,18 @@ result["pos_logs"] = [l for l in logs if "[PTA] pos" in l][:5]
 result["errors"] = errors
 result["bad_console"] = [l for l in logs if l.startswith(("error", "warning")) and "GPU stall" not in l][:10]
 print(json.dumps(result, ensure_ascii=False, indent=1))
+
+import os
+res = result.get("autotest") or {}
+budgets = {
+    "autotest_pass": bool(res.get("pass")),
+    "draw_calls<=150": res.get("draw_calls_max", 9999) <= 150,
+    "primitives<=80000": res.get("primitives_max", 10**9) <= 80000,
+    "texture_mem<=64MB": res.get("texture_mem_mb", 999) <= 64,
+    "game_started": result.get("game_started", False),
+    "no_page_errors": not errors,
+    "no_console_errors": not result["bad_console"],
+}
+sizes = {f: os.path.getsize(os.path.join(web_dir, f)) for f in ("index.pck", "index.wasm")}
+print("BUDGETS", json.dumps(budgets), "SIZES", json.dumps(sizes))
+sys.exit(0 if all(budgets.values()) else 1)
